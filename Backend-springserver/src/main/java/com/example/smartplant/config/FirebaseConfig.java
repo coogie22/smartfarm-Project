@@ -21,7 +21,7 @@ public class FirebaseConfig { // Firebase를 Spring Boot 애플리케이션에�
 
         FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setDatabaseUrl("https://" + "smartplant-9e659.firebaseio.com")
+                .setDatabaseUrl("https://" + "smart-plant-monitoring-s-fc3c1.firebaseio.com")
                 .build();
 
         // FirebaseApp 이름을 명시적으로 "DEFAULT"로 지정
