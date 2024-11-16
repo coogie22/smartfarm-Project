@@ -5,7 +5,6 @@ import com.example.smartplant.service.FirebaseMessagingService;
 import com.example.smartplant.service.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,6 +123,8 @@ public class SensorDataController {
             case "monthly": // 월별
                 start = now.minusMonths(1);
                 break;
+            default:
+                throw new IllegalArgumentException("Invalid period: " + period);
         }
 
         long startTimestamp = start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
@@ -191,5 +191,4 @@ public class SensorDataController {
 
         return result;
     }
-
 }
