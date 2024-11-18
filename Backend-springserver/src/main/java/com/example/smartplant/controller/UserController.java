@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users") // API 엔드포인트
-@CrossOrigin(origins = "*") // 모든 origin 허용
+@CrossOrigin(origins = "*") // 모든 origin 허용 -> 프론트엔드와 연동할 때 발생할 수 있는 CORS 문제를 방지
 public class UserController { // 새로운 사용자 관리 API
 
     @Autowired
