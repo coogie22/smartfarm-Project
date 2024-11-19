@@ -10,7 +10,6 @@ version = '0.0.1-SNAPSHOT'
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
-        vendor = JvmVendorSpec.ADOPTIUM // 원하는 Vendor 지정
     }
 }
 
@@ -20,7 +19,6 @@ repositories {
 }
 
 dependencies {
-
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.google.firebase:firebase-admin:9.1.1' // Firebase Admin SDK 추가

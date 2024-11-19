@@ -17,16 +17,21 @@ public class FirebaseConfig { // Firebase를 Spring Boot 애플리케이션에�
     public FirebaseApp firebaseApp() throws IOException {
         // FileInputStream 대신 ClassPathResource 사용 (파일 경로 문제 방지)
         ClassPathResource resource = new ClassPathResource("firebase-service-account.json");
-        InputStream serviceAccount = resource.getInputStream();
+        try (InputStream serviceAccount = resource.getInputStream()) {
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setDatabaseUrl(System.getenv("FIREBASE_DATABASE_URL"))
+// System.getenv("FIREBASE_DATABASE_URL")은 환경 변수 "FIREBASE_DATABASE_URL"의 값을 가져옵니다.
+// 환경 변수를 사용하면 데이터베이스 URL을 코드에 직접 포함시키지 않고 외부에서 설정할 수 있어 보안성과 유연성을 높일 수 있습니다.
+                    .build();
 
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setDatabaseUrl("https://" + "smartplant-9e659.firebaseio.com")
-                .build();
-
-        // FirebaseApp 이름을 명시적으로 "DEFAULT"로 지정
-        return FirebaseApp.initializeApp(options, "DEFAULT");
+            // FirebaseApp 이름을 명시적으로 "DEFAULT"로 지정, 이미 초기화된 경우 기존 인스턴스 반환
+            if (FirebaseApp.getApps().isEmpty()) {
+                return FirebaseApp.initializeApp(options, "DEFAULT");
+            } else {
+                return FirebaseApp.getInstance("DEFAULT");
+            }
+        }
     }
-
-
 }
+

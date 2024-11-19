@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users") // API 엔드포인트
-@CrossOrigin(origins = "*") // 모든 origin 허용
+@CrossOrigin(origins = "*") // 모든 origin 허용 -> 프론트엔드와 연동할 때 발생할 수 있는 CORS 문제를 방지
 public class UserController { // 새로운 사용자 관리 API
 
     @Autowired
@@ -17,8 +17,15 @@ public class UserController { // 새로운 사용자 관리 API
 
     // 회원가입 API
     @PostMapping("/register")  // API 엔드포인트
-    public String registerUser(@RequestBody User user) {
-        return userService.registerUser(user);
+    public ResponseEntity<String> registerUser(@RequestBody User user) {
+        try {
+            String result = userService.registerUser(user);
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
     }
 
     // 로그인 API

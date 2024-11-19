@@ -5,7 +5,6 @@ import com.example.smartplant.service.FirebaseMessagingService;
 import com.example.smartplant.service.SensorDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -13,7 +12,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/sensors")  // API 엔드포인트
-@CrossOrigin(origins = "*") // 모든 origin 허용
+@CrossOrigin(origins = "*") // 모든 origin 허용 -> 프론트엔드와 연동할 때 발생할 수 있는 CORS 문제를 방지
 public class SensorDataController {
 
     @Autowired
@@ -125,6 +123,8 @@ public class SensorDataController {
             case "monthly": // 월별
                 start = now.minusMonths(1);
                 break;
+            default:
+                throw new IllegalArgumentException("Invalid period: " + period);
         }
 
         long startTimestamp = start.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
@@ -191,5 +191,4 @@ public class SensorDataController {
 
         return result;
     }
-
 }

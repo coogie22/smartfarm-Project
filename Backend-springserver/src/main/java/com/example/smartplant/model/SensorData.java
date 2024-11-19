@@ -1,11 +1,11 @@
 package com.example.smartplant.model;
 
 public class SensorData { // 센서 데이터를 저장하기 위한 모델 클래스
-    private String id;
-    private double temperature;
-    private double humidity;
-    private double soilMoisture;
-    private long timestamp;
+    private String id; // 센서 ID
+    private double temperature;  // 온도 (°C)
+    private double humidity;  // 습도 (%)
+    private double soilMoisture;// 토양 수분 (%)
+    private long timestamp; // 데이터 생성 시간 (Unix timestamp)
 
     // 기본 생성자
     public SensorData() {}
