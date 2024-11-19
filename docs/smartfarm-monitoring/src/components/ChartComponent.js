@@ -5,8 +5,8 @@ function ChartComponent() {
   const chartRef = useRef(null);
   const canvasRef = useRef(null);
   const MAX_VISIBLE_POINTS = 20;
-  const [latestData, setLatestData] = useState(null); // 최신 데이터를 저장
-  const [historyData, setHistoryData] = useState([]); // 이전 데이터를 저장
+  const [latestData, setLatestData] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
 
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d');
@@ -55,7 +55,7 @@ function ChartComponent() {
     chartRef.current = chartInstance;
 
     // WebSocket 연결
-    const socket = new WebSocket('ws://localhost:5000');
+    const socket = new WebSocket('ws://34.22.71.108:5000'); // Google VM의 외부 IP 사용
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
       const { labels, datasets } = chartRef.current.data;
@@ -93,6 +93,10 @@ function ChartComponent() {
       chartRef.current.update();
     };
 
+    socket.onerror = (error) => {
+      console.error('WebSocket 오류:', error);
+    };
+
     return () => {
       socket.close();
       if (chartRef.current) {
@@ -103,12 +107,10 @@ function ChartComponent() {
 
   return (
     <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
-      {/* 차트 */}
       <div className="chart-container" style={{ flex: 1 }}>
         <canvas ref={canvasRef}></canvas>
       </div>
 
-      {/* 최신 데이터 창 */}
       <div
         style={{
           flexBasis: '300px',
@@ -131,7 +133,6 @@ function ChartComponent() {
               <p><strong>수신 시간:</strong> {new Date(latestData.timestamp).toLocaleString()}</p>
             </div>
 
-            {/* 데이터 히스토리 */}
             <div
               style={{
                 maxHeight: '200px',
