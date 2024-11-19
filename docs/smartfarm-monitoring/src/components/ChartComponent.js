@@ -1,10 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Chart from 'chart.js/auto';
 
 function ChartComponent() {
   const chartRef = useRef(null);
   const canvasRef = useRef(null);
   const MAX_VISIBLE_POINTS = 20;
+  const [latestData, setLatestData] = useState(null); // 최신 데이터를 저장
+  const [historyData, setHistoryData] = useState([]); // 이전 데이터를 저장
 
   useEffect(() => {
     const ctx = canvasRef.current.getContext('2d');
@@ -40,46 +42,59 @@ function ChartComponent() {
         responsive: true,
         maintainAspectRatio: false,
         animation: {
-          duration: 500, // 애니메이션 지속 시간 (밀리초)
-          easing: 'linear', // 선형 이동
+          duration: 500,
+          easing: 'linear',
         },
         scales: {
-          x: {
-            beginAtZero: true,
-          },
-          y: {
-            beginAtZero: true,
-          },
+          x: { beginAtZero: true },
+          y: { beginAtZero: true },
         },
       },
     });
 
     chartRef.current = chartInstance;
 
-    // 실시간 데이터 업데이트
-    const interval = setInterval(() => {
-      if (chartRef.current) {
-        const now = new Date().toLocaleTimeString();
-        const { labels, datasets } = chartRef.current.data;
+    // WebSocket 연결
+    const socket = new WebSocket('ws://localhost:5000');
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      const { labels, datasets } = chartRef.current.data;
 
-        // 새로운 데이터 추가
-        labels.push(now);
-        datasets[0].data.push(Math.random() * 30 + 20); // 온도 랜덤값
-        datasets[1].data.push(Math.random() * 50 + 30); // 습도 랜덤값
-        datasets[2].data.push(Math.random() * 100); // 토양 수분 랜덤값
+      // 최신 데이터 저장
+      setLatestData({
+        temperature: data.temperature,
+        humidity: data.humidity,
+        soilMoisture: data.soilMoisture,
+        timestamp: data.timestamp,
+      });
 
-        // 오래된 데이터는 자연스럽게 사라지도록 설정
-        if (labels.length > MAX_VISIBLE_POINTS) {
-          labels.shift(); // 가장 오래된 시간 제거
-          datasets.forEach((dataset) => dataset.data.shift()); // 가장 오래된 데이터 제거
-        }
+      // 데이터 히스토리에 추가
+      setHistoryData((prevHistory) => [
+        {
+          temperature: data.temperature,
+          humidity: data.humidity,
+          soilMoisture: data.soilMoisture,
+          timestamp: data.timestamp,
+        },
+        ...prevHistory,
+      ]);
 
-        chartRef.current.update(); // 차트 업데이트
+      // 차트 업데이트
+      labels.push(new Date(data.timestamp).toLocaleTimeString());
+      datasets[0].data.push(data.temperature); // 온도
+      datasets[1].data.push(data.humidity); // 습도
+      datasets[2].data.push(data.soilMoisture); // 토양 수분
+
+      if (labels.length > MAX_VISIBLE_POINTS) {
+        labels.shift();
+        datasets.forEach((dataset) => dataset.data.shift());
       }
-    }, 1000); // 1초마다 업데이트
+
+      chartRef.current.update();
+    };
 
     return () => {
-      clearInterval(interval);
+      socket.close();
       if (chartRef.current) {
         chartRef.current.destroy();
       }
@@ -87,8 +102,63 @@ function ChartComponent() {
   }, []);
 
   return (
-    <div className="chart-container">
-      <canvas ref={canvasRef}></canvas>
+    <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+      {/* 차트 */}
+      <div className="chart-container" style={{ flex: 1 }}>
+        <canvas ref={canvasRef}></canvas>
+      </div>
+
+      {/* 최신 데이터 창 */}
+      <div
+        style={{
+          flexBasis: '300px',
+          padding: '20px',
+          border: '1px solid #ddd',
+          borderRadius: '10px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          backgroundColor: '#f9f9f9',
+        }}
+      >
+        <h3 style={{ textAlign: 'center', color: '#00529b', marginBottom: '20px' }}>
+          Node.js에서 받아온 임의 데이터
+        </h3>
+        {latestData ? (
+          <>
+            <div style={{ marginBottom: '20px' }}>
+              <p><strong>온도:</strong> {latestData.temperature}°C</p>
+              <p><strong>습도:</strong> {latestData.humidity}%</p>
+              <p><strong>토양 수분:</strong> {latestData.soilMoisture}%</p>
+              <p><strong>수신 시간:</strong> {new Date(latestData.timestamp).toLocaleString()}</p>
+            </div>
+
+            {/* 데이터 히스토리 */}
+            <div
+              style={{
+                maxHeight: '200px',
+                overflowY: 'auto',
+                border: '1px solid #ddd',
+                padding: '10px',
+                borderRadius: '5px',
+                backgroundColor: '#fff',
+              }}
+            >
+              {historyData.map((item, index) => (
+                <div key={index} style={{ marginBottom: '10px' }}>
+                  <p>
+                    <strong>온도:</strong> {item.temperature}°C,{' '}
+                    <strong>습도:</strong> {item.humidity}%,{' '}
+                    <strong>토양 수분:</strong> {item.soilMoisture}%<br />
+                    <strong>수신 시간:</strong> {new Date(item.timestamp).toLocaleString()}
+                  </p>
+                  <hr style={{ margin: '5px 0', borderTop: '1px solid #ddd' }} />
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <p style={{ color: '#888', textAlign: 'center' }}>데이터를 로드 중...</p>
+        )}
+      </div>
     </div>
   );
 }
