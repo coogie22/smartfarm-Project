@@ -109,7 +109,7 @@ button:hover {
   background-color: #45a049;
 }
 
-/* 모달 스타일 */
+/* 모달 배경 */
 .modal {
   display: flex;
   position: fixed;
@@ -123,15 +123,79 @@ button:hover {
   align-items: center;
 }
 
+/* 모달 내용 */
 .modal-content {
   background-color: #fff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  width: 400px;
-  text-align: center;
-  animation: fadeIn 0.3s;
+  padding: 30px 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px; /* 모달 최대 너비 */
+  position: relative; /* X 버튼을 정확히 배치하기 위해 */
 }
+
+/* 닫기 버튼 */
+.close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  cursor: pointer;
+  font-size: 24px;
+  color: #888;
+  transition: color 0.3s;
+}
+
+.close:hover {
+  color: #333;
+}
+
+/* 입력 필드 */
+.modal-content input[type="text"],
+.modal-content input[type="password"] {
+  width: calc(100% - 20px); /* 입력 필드가 모달 안에 유지되도록 */
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content input:focus {
+  border-color: #4caf50;
+  outline: none;
+}
+
+/* 로그인 버튼 */
+.modal-content button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  color: white;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s;
+}
+
+.modal-content button:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+}
+
+.modal-content button:active {
+  transform: translateY(0);
+}
+
+/* 모달 타이틀 */
+.modal-content h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
 
 @keyframes fadeIn {
   from {

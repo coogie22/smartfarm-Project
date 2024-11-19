@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import HomePage from './components/HomePage';
 import AnalysisPage from './components/AnalysisPage';
 import ChartComponent from './components/ChartComponent';
 import Controls from './components/Controls';
-import LoginModal from './components/LoginModal'; // LoginModal 추가
+import LoginModal from './components/LoginModal';
 
 function App() {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
-  const [showModal, setShowModal] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(true); // 모달 상태 관리
 
   useEffect(() => {
     const clockInterval = setInterval(() => {
@@ -19,9 +19,14 @@ function App() {
     return () => clearInterval(clockInterval);
   }, []);
 
+  const handleLogin = () => {
+    setIsModalOpen(false); // 로그인 성공 시 모달 닫기
+  };
+
   return (
     <Router>
       <div className="App">
+        {/* 헤더 */}
         <header>
           <div className="dropdown">
             <button>메뉴</button>
@@ -34,14 +39,31 @@ function App() {
           <h1 className="header-title">스마트팜 모니터링</h1>
           <div id="clock">{time}</div>
         </header>
+
+        {/* 메인 */}
         <main>
-          {showModal && <LoginModal onClose={() => setShowModal(false)} />}
+          {isModalOpen && (
+            <LoginModal
+              onClose={() => setIsModalOpen(false)} // 닫기 버튼 동작
+              onLogin={handleLogin} // 로그인 동작
+            />
+          )}
           <Routes>
+            {/* 기본 경로 */}
             <Route path="/" element={<HomePage />} />
+
+            {/* 차트 페이지 */}
             <Route path="/chart" element={<><ChartComponent /><Controls /></>} />
+
+            {/* 데이터 분석 페이지 */}
             <Route path="/analysis" element={<AnalysisPage />} />
+
+            {/* 잘못된 경로 -> 홈페이지로 리다이렉트 */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+
+        {/* 푸터 */}
         <footer>
           <p>
             © 2024 스마트팜 모니터링 -{' '}
