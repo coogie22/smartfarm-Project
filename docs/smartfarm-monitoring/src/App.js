@@ -6,7 +6,6 @@ import AnalysisPage from './components/AnalysisPage';
 import ChartComponent from './components/ChartComponent';
 import Controls from './components/Controls';
 import LoginModal from './components/LoginModal';
-import BackendData from './components/BackendData';
 
 function App() {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
@@ -64,8 +63,6 @@ function App() {
           </Routes>
         </main>
 
-        {/* 추가: BackendData 컴포넌트 */}
-        <BackendData />
 
         {/* 푸터 */}
         <footer>
