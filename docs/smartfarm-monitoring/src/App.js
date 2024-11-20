@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom'; // HashRouter로 변경
 import HomePage from './components/HomePage';
 import AnalysisPage from './components/AnalysisPage';
 import ChartComponent from './components/ChartComponent';
@@ -24,7 +24,7 @@ function App() {
   };
 
   return (
-    <Router>
+    <Router> {/* HashRouter로 변경 */}
       <div className="App">
         {/* 헤더 */}
         <header>
@@ -62,7 +62,6 @@ function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
-
 
         {/* 푸터 */}
         <footer>
