@@ -1,0 +1,105 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+
+// Wi-Fi 정보
+const char* ssid = "";       // Wi-Fi 이름
+const char* password = "";     // Wi-Fi 비밀번호
+
+const char* serverName = "http://35.193.77.253:5000/humidity"; // Node.js 서버 주소
+
+const int sensorPin = 34;    // 토양 습도 센서가 연결된 GPIO 핀
+const int relayPin = 23;     // 릴레이 모듈 IN 핀이 연결된 GPIO 핀
+
+bool isServerRunning = true; // 서버가 실행 중인지 확인하는 변수
+int pumpDelay = 5000;        // 물펌프 작동 시간 (ms)
+int restDelay = 60000;       // 물펌프 작동 후 대기 시간 (ms)
+float humidityThreshold = 40.0; // 물펌프 작동 기준 습도 (%)
+
+void setup() {
+  Serial.begin(9600);  // 시리얼 모니터 초기화
+
+  // Wi-Fi 연결
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWi-Fi connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  // 릴레이 핀 초기화
+  pinMode(relayPin, OUTPUT);
+  digitalWrite(relayPin, HIGH); // 릴레이 OFF 상태로 초기화
+}
+
+void loop() {
+  // 시리얼 명령 처리 ("stop", "start")
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+    if (input == "stop") {
+      isServerRunning = false;
+      Serial.println("Server stopped.");
+    } else if (input == "start") {
+      isServerRunning = true;
+      Serial.println("Server started.");
+    }
+  }
+
+  if (isServerRunning) { // 서버가 실행 중일 때만 동작
+    if (WiFi.status() == WL_CONNECTED) { // Wi-Fi 연결 확인
+      int sensorValue = analogRead(sensorPin); // 센서 값 읽기
+
+      // 습도 계산: 값이 낮을수록 습함 (센서 값이 0일 때 100%, 4095일 때 0%)
+      float humidity = map(sensorValue, 0, 4095, 100, 0);
+
+      // 디버깅용 출력
+      Serial.print("Raw Sensor Value: ");
+      Serial.println(sensorValue);
+      Serial.print("Calculated Humidity: ");
+      Serial.print(humidity);
+      Serial.println(" %");
+
+      // 습도가 임계값 미만일 때 물펌프 작동
+      if (humidity < humidityThreshold) {
+        Serial.println("Soil is dry. Activating water pump...");
+        digitalWrite(relayPin, LOW); // 릴레이 ON (물펌프 작동)
+        delay(pumpDelay);            // 지정된 시간 동안 물 공급
+        digitalWrite(relayPin, HIGH); // 릴레이 OFF (물펌프 정지)
+        Serial.println("Watering complete. Waiting before next cycle...");
+        delay(restDelay);            // 지정된 시간 대기
+      }
+
+      // JSON 데이터 생성 및 서버로 전송
+      String jsonData = "{\"humidity\":" + String(humidity) + "}";
+
+      HTTPClient http;
+      http.begin(serverName); // 서버 주소 설정
+      http.addHeader("Content-Type", "application/json"); // JSON 형식 요청
+      int httpResponseCode = http.POST(jsonData); // POST 요청 전송
+
+      // 응답 확인
+      if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.print("HTTP Response code: ");
+        Serial.println(httpResponseCode);
+        Serial.println("Server response: " + response);
+      } else {
+        Serial.print("Error on sending POST: ");
+        Serial.println(httpResponseCode);
+        Serial.print("Error message: ");
+        Serial.println(http.errorToString(httpResponseCode).c_str());
+      }
+
+      http.end(); // 요청 종료
+    } else {
+      Serial.println("Wi-Fi Disconnected");
+    }
+
+    delay(3000); // 다음 서버 요청까지 3초 대기
+  } else {
+    delay(1000); // 서버 중단 상태에서 1초 대기
+  }
+}
