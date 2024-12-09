@@ -38,6 +38,13 @@
 
 ## 5. 기능 시연
 
+
+
+https://github.com/user-attachments/assets/debb5a3d-9258-417b-b697-66adff3707f6
+
+
+
+
 ## 5.1 하드웨어
 
 ## 5.2 웹
