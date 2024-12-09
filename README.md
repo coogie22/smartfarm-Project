@@ -48,7 +48,6 @@
 [https://coogie22.github.io/smartfarm-Project/](https://coogie22.github.io/REACT1/)  < - 웹 사이트
 
 
-https://github.com/user-attachments/assets/daf2bdcb-c9aa-44ec-9426-7a5eab6d5c65
 
 
 
