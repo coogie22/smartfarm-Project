@@ -22,12 +22,12 @@
 
 ## 3. 팀원 소개
 
-| 역할 |  이름  |                 GitHub                 |  담당  |
-| :--: | :----: | :------------------------------------: | :----: |
-|  FE  | 이재원 | [🔗 GitHub](https://github.com/coogie22) | ~ 담당 |
-|  BE  | 오승환 | [🔗 GitHub](https://github.com/tmdghks00) | ~ 담당 |
-|      | 이병규 | [🔗 GitHub](https://github.com/lbg9310) | ~ 담당 |
-|      | 김주석 | [🔗 GitHub](https://github.com/hanjuseok) | ~ 담당 |
+| 역할 |  이름  |                 GitHub                 | 
+| :--: | :----: | :------------------------------------: | 
+|  FE  | 이재원 | [🔗 GitHub](https://github.com/coogie22) 
+|  BE  | 오승환 | [🔗 GitHub](https://github.com/tmdghks00) 
+|  HW  | 이병규 | [🔗 GitHub](https://github.com/lbg9310) 
+|  BE  | 김주석 | [🔗 GitHub](https://github.com/hanjuseok) 
 
 ## 4. 개발 기간
 
