@@ -47,6 +47,7 @@
 ## 5.2 웹
 [https://coogie22.github.io/smartfarm-Project/](https://coogie22.github.io/REACT1/)  < - 웹 사이트
 
+![제목-없는-동영상43](https://github.com/user-attachments/assets/b6590502-3e42-45bc-a454-5860fd6d2539)
 
 
 
