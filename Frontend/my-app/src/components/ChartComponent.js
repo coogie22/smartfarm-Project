@@ -3,41 +3,78 @@ import Chart from "chart.js/auto";
 import { getDatabase, ref, onChildAdded } from "firebase/database";
 import { initializeApp } from "firebase/app";
 
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: "",
+};
 
-
-// Firebase 앱 초기화
+// Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 function ChartComponent() {
-  const chartRef = useRef(null);
   const canvasRef = useRef(null);
+  const chartRef = useRef(null);
+  const [latestData, setLatestData] = useState({
+    soilHumidity: null,
+    airHumidity: null,
+    temperature: null,
+    timestamp: null,
+  });
+  const [showModal, setShowModal] = useState(false); // 모달 상태 관리
   const MAX_VISIBLE_POINTS = 20;
-  const updateFrameRef = useRef(null);
-  const [latestData, setLatestData] = useState(null);
 
   useEffect(() => {
+    if (!canvasRef.current) {
+      console.error("Canvas element is missing.");
+      return;
+    }
+
     const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) {
+      console.error("Failed to get 2D context.");
+      return;
+    }
 
-    // 로컬 스토리지에서 저장된 데이터 불러오기
-    const savedChartData = JSON.parse(localStorage.getItem("chartData")) || {
-      labels: [],
-      data: [],
-    };
+    if (chartRef.current) {
+      console.warn("Chart instance already exists. Destroying old chart.");
+      chartRef.current.destroy();
+    }
 
-    // Chart.js 초기화
-    const chartInstance = new Chart(ctx, {
-      type: "line",
+    // 차트 초기화
+    chartRef.current = new Chart(ctx, {
+      type: "line", // 원하는 차트 유형 (막대형이라면 "bar"로 변경)
       data: {
-        labels: savedChartData.labels,
+        labels: [],
         datasets: [
           {
             label: "토양 습도 (%)",
-            data: savedChartData.data,
+            data: [],
+            backgroundColor: "rgba(54, 162, 235, 0.6)",
             borderColor: "rgba(54, 162, 235, 1)",
-            backgroundColor: "rgba(54, 162, 235, 0.2)",
             borderWidth: 2,
-            pointRadius: 4,
+            tension: 0.4,
+          },
+          {
+            label: "공기 습도 (%)",
+            data: [],
+            backgroundColor: "rgba(255, 159, 64, 0.6)",
+            borderColor: "rgba(255, 159, 64, 1)",
+            borderWidth: 2,
+            tension: 0.4,
+          },
+          {
+            label: "온도 (°C)",
+            data: [],
+            backgroundColor: "rgba(75, 192, 192, 0.6)",
+            borderColor: "rgba(75, 192, 192, 1)",
+            borderWidth: 2,
             tension: 0.4,
           },
         ],
@@ -45,17 +82,13 @@ function ChartComponent() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: {
-          mode: "nearest",
-        },
         scales: {
           x: {
             title: { display: true, text: "시간" },
           },
           y: {
             beginAtZero: true,
-            max: 100,
-            title: { display: true, text: "습도 (%)" },
+            title: { display: true, text: "값" },
           },
         },
         plugins: {
@@ -64,78 +97,67 @@ function ChartComponent() {
       },
     });
 
-    chartRef.current = chartInstance;
-
-    // Firebase 데이터 스트림 구독
-    const humidityRef = ref(db, "humidityData");
-    onChildAdded(humidityRef, (snapshot) => {
+    // Firebase 데이터 구독
+    const sensorDataRef = ref(db, "sensorData");
+    onChildAdded(sensorDataRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        const { labels, datasets } = chartRef.current.data;
+      console.log("받은 데이터:", data);
 
-        const humidity = data.humidity;
+      if (data) {
+        const soilHumidity = data.soilHumidity || 0;
+        const airHumidity = data.humidity || 0;
+        const temperature = data.temperature || 0;
         const timestamp = new Date(data.timestamp).toLocaleTimeString();
 
-        // 최신 데이터 상태 업데이트
+        // 최신 데이터 업데이트
         setLatestData({
-          humidity: humidity.toFixed(2),
+          soilHumidity: soilHumidity.toFixed(2),
+          airHumidity: airHumidity.toFixed(2),
+          temperature: temperature.toFixed(2),
           timestamp: new Date(data.timestamp).toLocaleString(),
         });
 
-        // 중복된 시간대의 데이터는 추가하지 않도록 처리
-        if (!labels.includes(timestamp)) {
-          labels.push(timestamp);
-          datasets[0].data.push(humidity);
+        const chart = chartRef.current;
+        if (!chart.data.labels.includes(timestamp)) {
+          chart.data.labels.push(timestamp);
+          chart.data.datasets[0].data.push(soilHumidity);
+          chart.data.datasets[1].data.push(airHumidity);
+          chart.data.datasets[2].data.push(temperature);
 
-          // 데이터 포인트 제한
-          if (labels.length > MAX_VISIBLE_POINTS) {
-            labels.shift();
-            datasets[0].data.shift();
+          // MAX_VISIBLE_POINTS 이상이면 데이터 자르기
+          if (chart.data.labels.length > MAX_VISIBLE_POINTS) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+            chart.data.datasets[1].data.shift();
+            chart.data.datasets[2].data.shift();
           }
 
-          // requestAnimationFrame을 활용한 차트 업데이트
-          if (!updateFrameRef.current) {
-            updateFrameRef.current = requestAnimationFrame(() => {
-              chartRef.current.update();
-              updateFrameRef.current = null;
-            });
-          }
+          chart.update();
+        }
+
+        // 토양 습도가 30% 미만일 경우 알림 모달 띄우기
+        if (soilHumidity < 30) {
+          setShowModal(true);
         }
       }
     });
 
-    // 일정 주기로 로컬 스토리지 저장
-    const storageInterval = setInterval(() => {
-      const { labels, datasets } = chartRef.current.data;
-      localStorage.setItem(
-        "chartData",
-        JSON.stringify({
-          labels,
-          data: datasets[0].data,
-        })
-      );
-    }, 5000);
-
+    // 컴포넌트 unmount 시 정리
     return () => {
       if (chartRef.current) {
         chartRef.current.destroy();
+        chartRef.current = null;
       }
-      if (updateFrameRef.current) {
-        cancelAnimationFrame(updateFrameRef.current);
-      }
-      clearInterval(storageInterval);
     };
   }, []);
 
+  // 모달 닫기
+  const closeModal = () => {
+    setShowModal(false);
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-      }}
-    >
-      {/* 컨텐츠 영역 */}
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <main
         style={{
           flex: "1",
@@ -146,14 +168,7 @@ function ChartComponent() {
           padding: "20px",
         }}
       >
-        <h1
-          style={{
-            marginBottom: "20px",
-            fontSize: "2.2rem",
-            color: "#2e7d32",
-            textAlign: "center",
-          }}
-        >
+        <h1 style={{ marginBottom: "20px", fontSize: "2.2rem", color: "#2e7d32", textAlign: "center" }}>
           실시간 데이터 차트
         </h1>
         <div
@@ -166,7 +181,6 @@ function ChartComponent() {
             alignItems: "center",
           }}
         >
-          {/* 차트 */}
           <div
             style={{
               width: "100%",
@@ -179,8 +193,6 @@ function ChartComponent() {
           >
             <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }}></canvas>
           </div>
-
-          {/* 실시간 데이터 */}
           <div
             style={{
               padding: "20px",
@@ -192,38 +204,69 @@ function ChartComponent() {
               textAlign: "center",
             }}
           >
-            <h3 style={{ color: "#00529b", marginBottom: "10px" }}>
-              실시간 데이터
-            </h3>
-            {latestData ? (
+            <h3 style={{ color: "#00529b", marginBottom: "10px" }}>실시간 데이터</h3>
+            {latestData.timestamp ? (
               <>
                 <p>
-                  <strong>토양 습도:</strong> {latestData.humidity}%
+                  <strong>토양 습도:</strong> {latestData.soilHumidity}%
                 </p>
                 <p>
-                  <strong>수신 시간:</strong> {latestData.timestamp}
+                  <strong>공기 습도:</strong> {latestData.airHumidity}%
+                </p>
+                <p>
+                  <strong>온도:</strong> {latestData.temperature}°C
+                </p>
+                <p>
+                  <strong>시간:</strong> {latestData.timestamp}
                 </p>
               </>
             ) : (
-              <p style={{ color: "#888" }}>데이터를 로드 중입니다...</p>
+              <p>데이터 로딩 중...</p>
             )}
           </div>
         </div>
       </main>
 
-      {/* 푸터 */}
-      <footer
-        style={{
-          backgroundColor: "#2e7d32",
-          color: "#fff",
-          textAlign: "center",
-          padding: "15px",
-          fontSize: "1rem",
-          marginTop: "auto",
-        }}
-      >
-        © 2024 스마트팜 모니터링 시스템. All rights reserved.
-      </footer>
+      {showModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: "0",
+            left: "0",
+            right: "0",
+            bottom: "0",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+          }}
+        >
+          <div
+            style={{
+              padding: "20px",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              textAlign: "center",
+            }}
+          >
+            <h2>알림</h2>
+            <p>토양 습도가 30% 미만입니다. 확인해주세요!</p>
+            <button
+              onClick={closeModal}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: "#f44336",
+                color: "#fff",
+                border: "none",
+                borderRadius: "5px",
+              }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

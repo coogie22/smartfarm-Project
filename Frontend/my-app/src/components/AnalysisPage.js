@@ -2,7 +2,16 @@ import React, { useEffect, useState, useCallback } from "react";
 import { getDatabase, ref, onValue, query, orderByChild, startAt, endAt } from "firebase/database";
 import { initializeApp } from "firebase/app";
 
-
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: "",
+};
 
 // Firebase 앱 초기화
 const app = initializeApp(firebaseConfig);
