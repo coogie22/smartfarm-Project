@@ -40,9 +40,6 @@
 
 
 
-https://github.com/user-attachments/assets/debb5a3d-9258-417b-b697-66adff3707f6
-
-
 
 
 ## 5.1 하드웨어
