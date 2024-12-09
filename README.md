@@ -31,8 +31,8 @@
 
 ## 4. 개발 기간
 
-- **시작일:** 2024-10-DD
-- **종료일:** 2024-MM-DD
+- **시작일:** 2024-10-30
+- **종료일:** 2024-12-03
 
 
 
@@ -41,7 +41,7 @@
 ## 5.1 하드웨어
 
 ## 5.2 웹
-https://coogie22.github.io/smartfarm-Project/  < - 웹 사이트
+[https://coogie22.github.io/smartfarm-Project/](https://coogie22.github.io/REACT1/)  < - 웹 사이트
 
 ### 1) 데스크탑 + 모바일
 
